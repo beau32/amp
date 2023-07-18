@@ -10,6 +10,9 @@ class AmpCompiler:
         self.tree = tree
 
     def compile(self):
+        global output
+        output += "import ampfunctions\n"
+
         self.walk_tree(self.tree)
         print(output)
     
@@ -60,7 +63,7 @@ class AmpCompiler:
             output += f"if {self.releval(element[1])}: \n"
             output += f"\t{self.eval(element[2])}"
         elif op == 'FUNC':
-            return f'{element[1]}({self.str_val(element[2])})'
+            return f"getattr(ampfunctions,'{element[1]}')(ampfunctions,{self.str_val(element[2])})\n"
         elif op == 'FOR':
             loopvar = element[1]
             initval = element[2]
@@ -69,14 +72,14 @@ class AmpCompiler:
             nextval = element[6]
             direction = element[3]
             
-            output += f"{loopvar} = {initval}\n"
-            output += f"while {loopvar} < {finval}: \n"
-            output += f"\t {eval(nextval)} \n"
+            output += f"{loopvar} = {self.str_val(initval)}\n"
+            output += f"while {loopvar} < {self.str_val(finval)}: \n"
+            output += f"\t {self.eval(stepval)}"
             
             if direction == 'TO':
-                output += f"\t {initval}+=1 \n"
+                output += f"\t {loopvar}+=1 \n"
             elif direction=='DOWNTO':
-                output += f"\t {finval}-=1 \n"
+                output += f"\t {loopvar}-=1 \n"
         elif op == '@':
             output += f"{element[1]} = None\n"
 

@@ -46,17 +46,17 @@ def p_program_error(p):
     p.parser.error = 1
 
 def p_statement_fordo(p):
-    '''statement : FOR '@' NAME '=' expression TO expression DO statement NEXT '@' NAME
-        statement : FOR '@' NAME '=' expression DOWNTO expression DO statement NEXT '@' NAME
+    '''statement : FOR '@' NAME '=' expression TO expression DO statements NEXT '@' NAME
+        statement : FOR '@' NAME '=' expression DOWNTO expression DO statements NEXT '@' NAME
     '''
     p[0] = ('FOR', p[3], p[5], p[6], p[7], p[9],p[12])
 
 
 
 def p_statement_ifelseif(p):
-    '''statement : IF expression THEN statement elseifchain ELSE statement ENDIF
-                 | IF expression THEN statement ELSE statement ENDIF
-                 | IF expression THEN statement ENDIF
+    '''statement : IF expression THEN statements elseifchain ELSE statements ENDIF
+                 | IF expression THEN statements ELSE statements ENDIF
+                 | IF expression THEN statements ENDIF
     '''
     if len(p)==9:
         p[0] = ('IFELSEIF', p[2], p[4], p[5],p[7])
@@ -66,8 +66,8 @@ def p_statement_ifelseif(p):
         p[0] = ('IF', p[2], p[4])
     
 def p_ifelseif_elseif(p):
-    '''elseifchain : elseifchain ELSEIF expression THEN statement 
-                    | ELSEIF expression THEN statement'''
+    '''elseifchain : elseifchain ELSEIF expression THEN statements 
+                    | ELSEIF expression THEN statements'''
     p[0] = ('ELSEIF',p[3], p[6])
         
     
