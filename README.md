@@ -4,7 +4,9 @@ Open Source PLY(lex/yacc) based Ampscript compiler to aide SFMC (Salesforce Mark
 
 to install
 ```
-pip3 install amp
+git clone https://github.com/beau32/amp.git
+cd amp
+pip3 install -r requirement.txt
 ```
 
 to launch the intrepeter
