@@ -1,0 +1,13 @@
+%%[
+
+VAR @a,@b,@c
+
+VAR @e
+SET @a = 1
+SET @b = 2
+SET @c= "Hi"
+
+IF @a < @b THEN 
+    V("World") ENDIF
+
+]%%

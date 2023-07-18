@@ -1,0 +1,6 @@
+ply==3.11
+pycparser==2.21
+pyduktape==0.0.6
+PyJWT==2.7.0
+pytz==2023.3
+
