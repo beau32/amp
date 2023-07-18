@@ -1,6 +1,5 @@
-import sys
-import ampyacc
-import logging
+import sys, logging
+from . import ampyacc
 
 output = ''
 

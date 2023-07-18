@@ -1,8 +1,5 @@
-import sys
-import ampyacc
-from ampinterpreter import AmpInterpreter
-from ampcompiler import AmpCompiler
-import logging
+import sys,logging
+from src import ampinterpreter, ampyacc, ampcompiler
 
 logging.basicConfig(
     level=logging.INFO,
@@ -17,7 +14,7 @@ if len(sys.argv) == 2:
     prog = ampyacc.parse(data)
     if not prog:
         raise SystemExit
-    b = AmpCompiler(prog)
+    b = ampcompiler.AmpCompiler(prog)
     
     try:
         b.compile()
@@ -25,7 +22,7 @@ if len(sys.argv) == 2:
     except RuntimeError:
         pass
 else:
-    b = AmpInterpreter({})
+    b = ampinterpreter.AmpInterpreter({})
 
     print('(o) Amp 0.0.5')
     while True:

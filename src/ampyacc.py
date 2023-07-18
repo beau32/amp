@@ -10,7 +10,7 @@
 # -----------------------------------------------------------------------------
 
 from ply import *
-import amplex
+from . import amplex
 
 tokens = amplex.tokens
 

@@ -9,10 +9,8 @@
 # This compiler runs ampscript code
 # -----------------------------------------------------------------------------
 
-import sys
-import ampyacc
-import logging
-import ampfunctions
+import sys,logging
+from . import ampfunctions, ampyacc
 
 
 
