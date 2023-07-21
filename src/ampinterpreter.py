@@ -85,41 +85,7 @@ class AmpInterpreter:
         etype = expr[1]
         lhs = self.eval(expr[2])
         rhs = self.eval(expr[3])
-        if etype == '<':
-            if lhs < rhs:
-                return 1
-            else:
-                return 0
-
-        elif etype == '<=':
-            if lhs <= rhs:
-                return 1
-            else:
-                return 0
-
-        elif etype == '>':
-            if lhs > rhs:
-                return 1
-            else:
-                return 0
-
-        elif etype == '>=':
-            if lhs >= rhs:
-                return 1
-            else:
-                return 0
-
-        elif etype == '=':
-            if lhs == rhs:
-                return 1
-            else:
-                return 0
-
-        elif etype == '<>':
-            if lhs != rhs:
-                return 1
-            else:
-                return 0
+        return eval(f"{self.eval(expr[2])} {etype} {self.eval(expr[3])}")
 
     # Assignment
     def assign(self, target, value):   

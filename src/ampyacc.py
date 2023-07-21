@@ -15,9 +15,12 @@ from . import amplex
 tokens = amplex.tokens
 
 precedence = (
+    ('left', 'AND', 'OR'),
     ('left', '+', '-'),
     ('left', '*', '/'),
-    ('left', 'AND', 'OR'),
+    ('left', 'LT', 'GT'),
+    ('left', 'LE', 'GE'),
+    ('left', 'EQ', 'NE'),
     ('right', 'UMINUS'),
 )
 
@@ -68,7 +71,10 @@ def p_statement_ifelseif(p):
 def p_ifelseif_elseif(p):
     '''elseifchain : elseifchain ELSEIF expression THEN statements 
                     | ELSEIF expression THEN statements'''
-    p[0] = ('ELSEIF',p[3], p[6])
+    if len(p)>5:
+        p[0] = ('ELSEIF', p[1],p[3], p[5])
+    else:
+        p[0] = ('ELSEIF', p[2],p[4])
         
     
 def p_condition_condibracket(p):
@@ -78,9 +84,7 @@ def p_condition_condibracket(p):
     p[0] = ('GROUP',p[2])
 
 def p_condition_logic(p):
-    '''expression : expression AND expression
-                | expression OR expression
-                | expression EQ expression
+    '''expression : expression EQ expression
                 | expression GE expression
                 | expression LE expression
                 | expression LT expression
@@ -109,6 +113,8 @@ def p_expression_calcop(p):
                   | expression '-' expression
                   | expression '*' expression
                   | expression '/' expression
+                  | expression AND expression
+                  | expression OR expression
                   '''
     p[0] = ('BINOP', p[2], p[1], p[3])
 

@@ -1,3 +1,14 @@
+# -----------------------------------------------------------------------------
+# amp-yacc.py
+
+# Copyright (C) 2023
+# B. Wang
+# All rights reserved.
+# Licensed under the BSD open source license agreement
+
+# This compiler runs ampscript code
+# -----------------------------------------------------------------------------
+
 import sys,logging
 from src import ampinterpreter, ampyacc, ampcompiler
 
