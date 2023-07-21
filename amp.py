@@ -11,6 +11,9 @@
 
 import sys,logging
 from src import ampinterpreter, ampyacc, ampcompiler
+from prompt_toolkit import prompt
+from prompt_toolkit.history import FileHistory
+from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
 
 logging.basicConfig(
     level=logging.INFO,
@@ -38,7 +41,7 @@ else:
     print('(o) Amp 0.0.5')
     while True:
         try:
-            s = input('amp > ')
+            s = prompt('amp > ',history=FileHistory('.history.txt'),auto_suggest=AutoSuggestFromHistory())
         except EOFError:
             break
         if not s:

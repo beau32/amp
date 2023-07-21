@@ -99,6 +99,13 @@ class AmpInterpreter:
                 print("UNDEFINED VARIABLE @%s AT LINE %s" %
                         (target, self.pc))
                 raise RuntimeError
+    def flatten_list(self, nested_list, result = []):
+        for item in nested_list:
+            if isinstance(item, tuple):
+                self.flatten_list(item,result)
+            else:
+                result.append(item)
+        return result
                     
     def interpret(self):
 
@@ -116,8 +123,13 @@ class AmpInterpreter:
         self.pc += 1
 
         if op == 'VAR':
-            for x in instr[1]:
-                self.assign(x, None)
+            if isinstance(instr[1],tuple):
+                flist = self.flatten_list(instr[1])
+                for x in flist:
+                    if x != '@':
+                        self.assign(x, None)
+            else:
+                self.assign(instr[1], None)
         elif op == 'SET':
             target = instr[1]
             value = instr[2]
@@ -137,8 +149,26 @@ class AmpInterpreter:
         elif op == 'IF':
             relop = instr[1]
             newline = instr[2]
-            if (self.releval(relop)):
-                self.eval(newline)
+            output = ''
+            output += f"if {self.releval(relop)}: \n"
+            output += self.loop(newline)
+            exec(output)
+        elif op == 'IFELSEIF':
+            output = ''
+            output += f"if {self.releval(instr[1])}: \n"
+            output += f"{self.loop(instr[2])} \n"
+
+            output += f"{self.loop(instr[3])} \n"
+            output += f"else: \n"
+            output += f"{self.loop(instr[4])} \n"
+            exec(output)
+        elif op == 'IFELSE':
+            output = ''
+            output += f"if {self.releval(instr[1])}: \n"
+            output += f"{self.loop(instr[2])}"
+            output += f"else: \n"
+            output += f"{self.loop(instr[3])}"
+            exec(output)
         elif op == 'FOR':
             loopvar = instr[1]
             initval = instr[2]
@@ -173,7 +203,19 @@ class AmpInterpreter:
             if (re):
                 print(re)
         
-
+    def loop(self, element, s=''):
+        if isinstance(element[0], tuple):
+                s += self.loop(element[0],s)
+                s += self.loop(element[1],s)
+        else:
+            op = element[0]
+            
+            if op == 'ELSEIF':
+                s += f"elif {self.releval(element[1])}: \n"
+                s += f"\t{self.eval(element[2])} \n"
+            elif op == 'FUNC' :
+                s = f"\tgetattr(ampfunctions,'{element[1]}')(ampfunctions,{self.var_str(element[2])})\n"
+        return s
         
     # Utility functions for program listing
     def expr_str(self, expr):
@@ -194,37 +236,14 @@ class AmpInterpreter:
     def relexpr_str(self, expr):
         return "%s %s %s" % (self.expr_str(expr[2]), expr[1], self.expr_str(expr[3]))
 
-    def var_str(self, var):
-        varname, dim1, dim2 = var
-        if not dim1 and not dim2:
-            return varname
-        if dim1 and not dim2:
-            return "%s(%s)" % (varname, self.expr_str(dim1))
-        return "%s(%s,%s)" % (varname, self.expr_str(dim1), self.expr_str(dim2))
+    def var_str(self, tup):
 
-    # Create a program listing
-    def list(self):
-        stat = list(self.prog)      # Ordered list of all line numbers
-        stat.sort()
-        for line in stat:
-            instr = self.prog[line]
-            op = instr[0]
-            
-            if op == 'VAR':
-                print("%s VAR %s = %s" %
-                      (line, self.var_str(instr[1]), self.expr_str(instr[2])))
-            elif op == 'IF':
-                print("%s IF %s THEN %d ENDIF"  %
-                      (line, self.relexpr_str(instr[1]), instr[2]))
-            elif op == 'FOR':
-                _out = "%s FOR %s = %s TO %s" % (
-                    line, instr[1], self.expr_str(instr[2]), self.expr_str(instr[3]))
-                if instr[4]:
-                    _out += " NEXT %s" % (self.expr_str(instr[4]))
-                print(_out)
-            elif op == 'NEXT':
-                print("%s NEXT %s" % (line, instr[1]))
-            
+        if tup[0]=='INT':
+            return f"{tup[1]}"
+        elif tup[0] == 'STR':
+            return f"'{tup[1]}'"
+        elif tup[0] == '@':
+            return f"{self.vars[tup[1]]}"
 
     # Erase the current program
     def new(self):

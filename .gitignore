@@ -2,3 +2,4 @@ parse*
 py3/*
 __pycache__
 .vscode
+.history.txt

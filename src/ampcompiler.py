@@ -21,7 +21,7 @@ class AmpCompiler:
 
     def compile(self):
         global output
-        output += "import ampfunctions\n"
+        output += "from src import ampfunctions\n"
 
         self.walk_tree(self.tree)
         print(output)
@@ -43,7 +43,7 @@ class AmpCompiler:
             return f"{tup[1]}"
 
     def eval(self, element):
-        global output,flattened
+        global output
 
         op = element[0]
 
@@ -60,7 +60,7 @@ class AmpCompiler:
             output += f"{element[1]} = {self.str_val(element[2])}\n"
         elif op == 'IF':
             output += f"if {self.releval(element[1])}: \n"
-            output += f"\t{self.loop(element[2])} \n"
+            output += f"{self.loop(element[2])} \n"
         elif op == 'IFELSEIF':
             output += f"if {self.releval(element[1])}: \n"
             output += f"{self.loop(element[2])} \n"
@@ -70,9 +70,9 @@ class AmpCompiler:
             output += f"{self.loop(element[4])} \n"
         elif op == 'IFELSE':
             output += f"if {self.releval(element[1])}: \n"
-            output += f"\t{self.loop(element[2])}"
+            output += f"{self.loop(element[2])}"
             output += f"else: \n"
-            output += f"\t{self.loop(element[3])}"
+            output += f"{self.loop(element[3])}"
         elif op == 'FOR':
             loopvar = element[1]
             initval = element[2]
@@ -86,9 +86,9 @@ class AmpCompiler:
             output += f"{self.loop(stepval)}"
             
             if direction == 'TO':
-                output += f"\t {loopvar}+=1 \n"
+                output += f"\t{loopvar}+=1 \n"
             elif direction=='DOWNTO':
-                output += f"\t {loopvar}-=1 \n"
+                output += f"\t{loopvar}-=1 \n"
         elif op == '@':
             output += f"{element[1]} = None\n"
         elif op=='FUNC':
@@ -96,10 +96,10 @@ class AmpCompiler:
             output += s
             return s
 
-    def flatten_list(self, nested_list):
+    def flatten_list(self, nested_list, flattened = []):
         for item in nested_list:
             if isinstance(item, tuple):
-                self.flatten_list(item)
+                self.flatten_list(item,flattened)
             else:
                 flattened.append(item)
         return flattened
@@ -113,7 +113,7 @@ class AmpCompiler:
             if op == 'GROUP':
                 return f"{self.releval(element[1])}"
             elif op == 'RELOP' or op == 'BINOP':
-                return f"{self.releval(element[2])} {element[1]} {self.releval(element[3])}"
+                return f"{self.releval(element[2])} {element[1].lower()} {self.releval(element[3])}"
             elif op == '@':
                 return f"{element[1]}"
     
@@ -126,7 +126,7 @@ class AmpCompiler:
             
             if op == 'ELSEIF':
                 s += f"elif {self.releval(element[1])}: \n"
-                s += f"\t {self.eval(element[2])} \n"
+                s += f"\t{self.eval(element[2])} \n"
             elif op == 'FUNC' :
                 s = f"\tgetattr(ampfunctions,'{element[1]}')(ampfunctions,{self.str_val(element[2])})\n"
         return s

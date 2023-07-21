@@ -147,16 +147,22 @@ def p_expression_number(p):
 def p_expression_name(p):
     """expression : '@' NAME"""
     p[0] = ('@', p[2])
+def p_expression_name_error(p):
+    """expression : '@' NAME error"""
 
 def p_expression_commaname(p):
     """list : list ',' '@' NAME
             | '@' NAME
     """
-
     if len(p) > 3:
         p[0] = (p[1], '@', p[4])
     else:
         p[0] = (p[1],p[2])
+
+def p_expression_commaname_error(p):
+    """list : list ',' '@' NAME  error
+            | '@' NAME error
+    """
 
 def p_error(p):
     if p:
