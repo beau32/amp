@@ -20,7 +20,7 @@ class AmpInterpreter:
     # containing (line,statement) mappings
     def __init__(self, prog):
         self.prog = prog
-        self.functions = ampfunctions
+        self.functions = ampfunctions.func
 
         self.vars = {}            # All variables
         self.lists = {}            # List variables

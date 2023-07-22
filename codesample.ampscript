@@ -20,7 +20,7 @@ IF (@b > @a + @a AND @b == @b) THEN
 ELSEIF (@b > @a OR @c) THEN
     V("yes")
 ELSE
-    V("ULTIMATE")
+    V("ULTIMATE",@a)
     V(@c)
 ENDIF
 
