@@ -28,11 +28,15 @@ def p_program(p):
     '''program : OPEN statements CLOSE
                 | SOPEN expression SCLOSE
                 | statements'''
-    
+
     if p[1]== "%%=" or p[1] == "%%[":
         p[0] = p[2]
     else:
         p[0] = p[1]
+def p_program_error(p):
+    '''program : error'''
+    p[0] = None
+    p.parser.error = 1
 
 def p_statements(p):
     '''statements : statements statement
@@ -43,8 +47,8 @@ def p_statements(p):
     elif len(p) == 2:
         p[0] = p[1]
 
-def p_program_error(p):
-    '''program : error'''
+def p_statement_error(p):
+    '''statement : error'''
     p[0] = None
     p.parser.error = 1
 
