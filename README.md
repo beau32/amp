@@ -14,7 +14,7 @@ to launch the intrepeter
 python3 amp.py
 ```
 
-to launch the compiler and transcode to python
+to launch the compiler and transcode to either javascript or python
 ```
-python3 amp.py codesample.ampscript > output.py
+python3 amp.py -l js -i codesample.ampscript > output.py
 ```
