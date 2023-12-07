@@ -17,7 +17,7 @@ tokens = keywords + (
     'NAME', 'NUMBER', 'STRING','EQ','GE','LE','NE','LT','GT'
 )
 
-literals = ['=', '+', '-', '*', '/', '(', ')','@','\"','\"',',','%','[',']']
+literals = ['=', '+', '-', '*', '/', '(', ')','@','"','"',',','%','[',']']
 
 # Tokens
 
@@ -51,6 +51,7 @@ def t_error(t):
 def t_COMMENT(t):
     r'\/\*.*\*\/'
     pass
+
 
 # Parsing rules
 t_LT = r'<'

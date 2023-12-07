@@ -47,11 +47,6 @@ def p_statements(p):
     elif len(p) == 2:
         p[0] = p[1]
 
-def p_statement_error(p):
-    '''statement : error'''
-    p[0] = None
-    p.parser.error = 1
-
 def p_statement_fordo(p):
     '''statement : FOR '@' NAME '=' expression TO expression DO statements NEXT '@' NAME
         statement : FOR '@' NAME '=' expression DOWNTO expression DO statements NEXT '@' NAME
