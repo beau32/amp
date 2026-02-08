@@ -1,0 +1,7 @@
+%%[
+VAR @counter
+SET @counter = 0
+IF @counter == 0 THEN
+    SET @counter = 5
+ENDIF
+]%%

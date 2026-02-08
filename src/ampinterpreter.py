@@ -1,49 +1,64 @@
-# -----------------------------------------------------------------------------
-# amp-yacc.py
-
-# Copyright (C) 2023
-# B. Wang
+# =============================================================================
+# ampinterpreter.py
+#
+# Copyright (C) 2023 B. Wang
 # All rights reserved.
 # Licensed under the BSD open source license agreement
+#
+# Interpreter for executing AmpScript AST.
+# =============================================================================
+"""Interpreter for executing AmpScript AST."""
 
-# This compiler runs ampscript code
-# -----------------------------------------------------------------------------
-
-import sys,logging
+import logging
 from . import ampfunctions, ampyacc
 
 
+logger = logging.getLogger(__name__)
+
 
 class AmpInterpreter:
+    """Interpreter for executing AmpScript AST."""
 
-    # Initialize the interpreter. prog is a dictionary
-    # containing (line,statement) mappings
     def __init__(self, prog):
+        """
+        Initialize the interpreter with a program dictionary.
+
+        Args:
+            prog: Dictionary containing (line, statement) mappings
+        """
         self.prog = prog
-        self.functions = ampfunctions.func
+        self.functions = ampfunctions.func()
 
-        self.vars = {}            # All variables
-        self.lists = {}            # List variables
-        self.tables = {}            # Tables
-        self.loops = []            # Currently active loops
-        self.loopend = {}
-        self.error = 0   
-        self.pc = 0 
+        self.vars = {}          # All variables
+        self.lists = {}         # List variables
+        self.tables = {}        # Table definitions
+        self.loops = []         # Currently active loop stack
+        self.loopend = {}       # Loop end conditions
+        self.error = 0          # Error flag
+        self.pc = 0             # Program counter
 
-    # Evaluate an expression
     def eval(self, expr):
-        if (expr == None):
+        """
+        Evaluate an expression and return its value.
+
+        Args:
+            expr: Expression tuple from AST
+
+        Returns:
+            Expression result or None
+        """
+        if expr is None:
             return None
-        
+
         etype = expr[0]
-        
+
         if etype == 'GROUP':
             return self.eval(expr[1])
         elif etype == 'UNARY':
             if expr[1] == '-':
                 return -self.eval(expr[2])
         elif etype == 'RELOP':
-                return str(eval(f'{self.eval(expr[2])} {expr[1]} {self.eval(expr[3])}'))
+            return str(eval(f'{self.eval(expr[2])} {expr[1]} {self.eval(expr[3])}'))
         elif etype == 'BINOP':
             if expr[1] == '+':
                 return self.eval(expr[2]) + self.eval(expr[3])
@@ -55,97 +70,117 @@ class AmpInterpreter:
                 return float(self.eval(expr[2])) / self.eval(expr[3])
         elif etype == 'FUNC':
             var = expr[1]
-            if hasattr(self.functions,var) :
-                # A function
-                func = getattr(self.functions,var)
-                return func(self.functions, self.eval(expr[2]))
+            if hasattr(self.functions, var):
+                func = getattr(self.functions, var)
+                return func(self.eval(expr[2]))
             else:
-                print("UNDEFINED FUNCTION %s AT LINE %s" %
-                    (var, self.stat[self.pc]))
-                raise RuntimeError
+                logger.error("UNDEFINED FUNCTION %s AT LINE %s", var, self.pc)
+                raise RuntimeError(f"Undefined function: {var}")
         elif etype == 'INT':
             return int(expr[1])
         elif etype == 'STR':
             return str(expr[1])
         elif etype == '@':
             if expr[1] in self.vars:
-                if isinstance(self.vars[expr[1]],int):
-                    return int(self.vars[expr[1]])
-                elif isinstance(self.vars[expr[1]], str):
-                    return str(self.vars[expr[1]])
-                elif isinstance(self.vars[expr[1]], float):
-                    return float(self.vars[expr[1]])
+                value = self.vars[expr[1]]
+                if isinstance(value, int):
+                    return int(value)
+                elif isinstance(value, str):
+                    return str(value)
+                elif isinstance(value, float):
+                    return float(value)
             else:
-                print("UNDEFINED VARIABLE @%s AT LINE %s" %
-                        (expr[1], self.pc))
-                raise RuntimeError
+                logger.error("UNDEFINED VARIABLE @%s AT LINE %s", expr[1], self.pc)
+                raise RuntimeError(f"Undefined variable: @{expr[1]}")
 
-    # Evaluate a relational expression
     def releval(self, expr):
-        etype = expr[1]
+        """
+        Evaluate a relational expression.
+
+        Args:
+            expr: Relational expression tuple
+
+        Returns:
+            Boolean result
+        """
         lhs = self.eval(expr[2])
         rhs = self.eval(expr[3])
-        return eval(f"{self.eval(expr[2])} {etype} {self.eval(expr[3])}")
+        return eval(f"{lhs} {expr[1]} {rhs}")
 
-    # Assignment
-    def assign(self, target, value):   
-        
-        if value == None:
+    def assign(self, target, value):
+        """
+        Assign a value to a variable.
+
+        Args:
+            target: Variable name
+            value: Value to assign
+        """
+        if value is None:
             self.vars[target] = None
         else:
             if target in self.vars:
                 self.vars[target] = self.eval(value)
             else:
-                print("UNDEFINED VARIABLE @%s AT LINE %s" %
-                        (target, self.pc))
-                raise RuntimeError
-    def flatten_list(self, nested_list, result = []):
+                logger.error("UNDEFINED VARIABLE @%s AT LINE %s", target, self.pc)
+                raise RuntimeError(f"Undefined variable: @{target}")
+
+    def flatten_list(self, nested_list, result=None):
+        """
+        Flatten a nested list structure.
+
+        Args:
+            nested_list: Nested list from AST
+            result: Accumulator list
+
+        Returns:
+            Flattened list
+        """
+        if result is None:
+            result = []
         for item in nested_list:
             if isinstance(item, tuple):
-                self.flatten_list(item,result)
+                self.flatten_list(item, result)
             else:
                 result.append(item)
         return result
-                    
-    def interpret(self):
 
+    def interpret(self):
+        """Execute the program statements in order."""
         self.stat = list(self.prog)  # Ordered list of all line numbers
         self.stat.sort()
 
         if self.error:
-            raise RuntimeError
+            raise RuntimeError("Previous error detected")
 
         line = self.stat[self.pc]
         instr = self.prog[line]
 
         op = instr[0]
-        
         self.pc += 1
 
         if op == 'VAR':
-            if isinstance(instr[1],tuple):
+            if isinstance(instr[1], tuple):
                 flist = self.flatten_list(instr[1])
-                for x in flist:
-                    if x != '@':
-                        self.assign(x, None)
+                for var in flist:
+                    if var != '@':
+                        self.assign(var, None)
             else:
                 self.assign(instr[1], None)
         elif op == 'SET':
             target = instr[1]
             value = instr[2]
-            
+
             if target in self.vars:
                 self.assign(target, value)
             else:
-                print("UNDEFINED VARIABLE @%s AT LINE %s" %
-                      (instr[1], self.pc))
-                raise RuntimeError
+                logger.error("UNDEFINED VARIABLE @%s AT LINE %s", instr[1], self.pc)
+                raise RuntimeError(f"Undefined variable: @{instr[1]}")
         elif op == '@':
-            if (instr[1] in self.vars):
+            if instr[1] in self.vars:
                 print(self.vars[instr[1]])
             else:
-                print("UNRECOGNISED VARIABLE @%s AT LINE %s" % (instr[1], self.pc))
-                raise RuntimeError
+                logger.error("UNRECOGNISED VARIABLE @%s AT LINE %s", instr[1], self.pc)
+                raise RuntimeError(f"Unrecognised variable: @{instr[1]}")
         elif op == 'IF':
             relop = instr[1]
             newline = instr[2]
@@ -157,7 +192,6 @@ class AmpInterpreter:
             output = ''
             output += f"if {self.releval(instr[1])}: \n"
             output += f"{self.loop(instr[2])} \n"
-
             output += f"{self.loop(instr[3])} \n"
             output += f"else: \n"
             output += f"{self.loop(instr[4])} \n"
@@ -176,79 +210,102 @@ class AmpInterpreter:
             stepval = instr[5]
             nextval = instr[6]
             direction = instr[3]
-            
+
             if loopvar not in self.vars:
                 self.assign(loopvar, None)
 
             if loopvar != nextval:
-                print("UNRECOGNISED NEXT VARIABLE @%s AT LINE %s" %
-                      (finval, self.pc))
-                raise RuntimeError 
-            
+                logger.error("UNRECOGNISED NEXT VARIABLE @%s AT LINE %s", finval, self.pc)
+                raise RuntimeError(f"Unrecognised next variable: @{finval}")
+
             self.assign(loopvar, initval)
             if not stepval:
                 stepval = ('INT', 1)
 
             if direction == 'TO':
-                while (self.vars[loopvar]< self.eval(finval)):
+                while self.vars[loopvar] < self.eval(finval):
                     self.eval(stepval)
-                    self.vars[loopvar] +=1
-            elif direction=='DOWNTO':
-                while (self.vars[loopvar]> self.eval(finval)):
+                    self.vars[loopvar] += 1
+            elif direction == 'DOWNTO':
+                while self.vars[loopvar] > self.eval(finval):
                     self.eval(stepval)
-                    self.vars[loopvar] -=1
+                    self.vars[loopvar] -= 1
             del self.vars[loopvar]
         else:
-            re = self.eval(instr)
-            if (re):
-                print(re)
-        
-    def loop(self, element, s=''):
+            result = self.eval(instr)
+            if result:
+                print(result)
+
+    def loop(self, element, output_str=""):
+        """
+        Process loop body statements.
+
+        Args:
+            element: Loop body element from AST
+            output_str: Accumulated output string
+
+        Returns:
+            Generated Python code string
+        """
         if isinstance(element[0], tuple):
-                s += self.loop(element[0],s)
-                s += self.loop(element[1],s)
+            output_str += self.loop(element[0], output_str)
+            output_str += self.loop(element[1], output_str)
         else:
             op = element[0]
-            
+
             if op == 'ELSEIF':
-                s += f"elif {self.releval(element[1])}: \n"
-                s += f"\t{self.eval(element[2])} \n"
-            elif op == 'FUNC' :
-                s = f"\tgetattr(ampfunctions,'{element[1]}')(ampfunctions,{self.var_str(element[2])})\n"
-        return s
-        
-    # Utility functions for program listing
+                output_str += f"elif {self.releval(element[1])}: \n"
+                output_str += f"\t{self.eval(element[2])} \n"
+            elif op == 'FUNC':
+                output_str = f"\tgetattr(ampfunctions,'{element[1]}')({self.var_str(element[2])})\n"
+        return output_str
+
     def expr_str(self, expr):
+        """
+        Convert an expression tuple to a string representation.
+
+        Args:
+            expr: Expression tuple from AST
+
+        Returns:
+            String representation
+        """
         etype = expr[0]
-        
+
         if etype == 'GROUP':
-            return "(%s)" % self.expr_str(expr[1])
+            return f"({self.expr_str(expr[1])})"
         elif etype == 'UNARY':
             if expr[1] == '-':
                 return "-" + str(expr[2])
         elif etype == 'RELOP':
-            return "%s %s %s" % (self.expr_str(expr[2]), expr[1], self.expr_str(expr[3]))
+            return f"{self.expr_str(expr[2])} {expr[1]} {self.expr_str(expr[3])}"
         elif etype == 'BINOP':
-            return "%s %s %s" % (self.expr_str(expr[2]), expr[1], self.expr_str(expr[3]))
+            return f"{self.expr_str(expr[2])} {expr[1]} {self.expr_str(expr[3])}"
         elif etype == 'VAR':
             return self.var_str(expr[1])
 
     def relexpr_str(self, expr):
-        return "%s %s %s" % (self.expr_str(expr[2]), expr[1], self.expr_str(expr[3]))
+        """Convert relational expression to string."""
+        return f"{self.expr_str(expr[2])} {expr[1]} {self.expr_str(expr[3])}"
 
     def var_str(self, tup):
-
-        if tup[0]=='INT':
+        """Convert a value tuple to string."""
+        if tup[0] == 'INT':
             return f"{tup[1]}"
         elif tup[0] == 'STR':
             return f"'{tup[1]}'"
         elif tup[0] == '@':
-            return f"{self.vars[tup[1]]}"
+            return f"{self.vars.get(tup[1], '')}"
 
-    # Erase the current program
     def new(self):
+        """Clear the program."""
         self.prog = {}
 
-    # Insert statements
     def add_statements(self, prog):
+        """
+        Add statements to the program.
+
+        Args:
+            prog: Statement tuple to add
+        """
         self.prog[len(self.prog)] = prog

@@ -1,69 +1,91 @@
-# -----------------------------------------------------------------------------
-# amp-yacc.py
-
-# Copyright (C) 2023
-# B. Wang
+# =============================================================================
+# amplex.py
+#
+# Copyright (C) 2023 B. Wang
 # All rights reserved.
 # Licensed under the BSD open source license agreement
+#
+# Lexical analyzer for AmpScript language using PLY.
+# =============================================================================
+"""Tokenizer for AmpScript language using PLY lexer."""
 
-# This compiler runs ampscript code
-# -----------------------------------------------------------------------------
+import ply.lex as lex
 
-from ply import *
-
-keywords = ('SET','IF', 'FOR','THEN','AND','OR','ELSE','ENDIF','NEXT','DO','TO','DOWNTO','ELSEIF','NOT','VAR','OPEN','CLOSE','SOPEN', 'SCLOSE')
-
-tokens = keywords + (
-    'NAME', 'NUMBER', 'STRING','EQ','GE','LE','NE','LT','GT'
+# Reserved keywords in AmpScript
+AMPSCRIPT_KEYWORDS = (
+    'SET', 'IF', 'FOR', 'THEN', 'AND', 'OR', 'ELSE', 'ENDIF',
+    'NEXT', 'DO', 'TO', 'DOWNTO', 'ELSEIF', 'NOT', 'VAR',
+    'OPEN', 'CLOSE', 'SOPEN', 'SCLOSE'
 )
 
-literals = ['=', '+', '-', '*', '/', '(', ')','@','"','"',',','%','[',']']
+# Keywords
+KEYWORDS = AMPSCRIPT_KEYWORDS
 
-# Tokens
+# Token types
+tokens = KEYWORDS + (
+    'NAME', 'NUMBER', 'STRING', 'EQ', 'GE', 'LE', 'NE', 'LT', 'GT'
+)
 
-def t_NAME(t) :
+# Single-character tokens
+literals = ['=', '+', '-', '*', '/', '(', ')', '@', '"', ',', '%', '[', ']']
+
+
+def t_NAME(token):
     r'[a-zA-Z_][a-zA-Z0-9_]*'
-    if t.value in keywords:
-        t.type = t.value
-    return t
+    # Check if it's an AmpScript keyword
+    if token.value in AMPSCRIPT_KEYWORDS:
+        token.type = token.value
+    return token
 
 
-def t_NUMBER(t):
+def t_NUMBER(token):
     r'\d+'
-    t.value = int(t.value)
-    return t
+    token.value = int(token.value)
+    return token
 
-def t_STRING(t):
-    r'\"\w+\"'
-    t.value = str(t.value.replace('"',''))
-    return t
 
+def t_STRING(token):
+    r'"[^"]*"'
+    # Remove quotes and store the content
+    token.value = str(token.value[1:-1])
+    return token
+
+
+# Ignored characters (whitespace)
 t_ignore = " \t"
 
-def t_newline(t):
+
+def t_newline(token):
     r'\n+'
-    t.lexer.lineno += t.value.count("\n")
+    token.lexer.lineno += token.value.count("\n")
 
-def t_error(t):
-    print("Illegal character '%s'" % t.value[0])
-    t.lexer.skip(1)
 
-def t_COMMENT(t):
-    r'\/\*.*\*\/'
+def t_error(token):
+    """Handle illegal characters."""
+    print("Illegal character '%s'" % token.value[0])
+    token.lexer.skip(1)
+
+
+def t_COMMENT(token):
+    r'\/\*.*?\*\/'
     pass
 
 
-# Parsing rules
-t_LT = r'<'
+# Comparison and assignment operators
 t_LE = r'<='
-t_GT = r'>'
 t_GE = r'>='
 t_NE = r'!='
 t_EQ = r'=='
-t_OPEN= r'\%\%\['
+t_LT = r'<'
+t_GT = r'>'
+
+# AmpScript tag delimiters
+t_OPEN = r'\%\%\['
 t_CLOSE = r'\]\%\%'
-t_SOPEN= r'\%\%\='
+t_SOPEN = r'\%\%\='
 t_SCLOSE = r'\=\%\%'
 
 # Build the lexer
-lex.lex()
+lexer = lex.lex()
+
+

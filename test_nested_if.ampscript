@@ -1,0 +1,11 @@
+%%[
+VAR @counter
+SET @counter = 3
+
+IF @counter > 0 THEN
+    V("Counter is positive")
+    IF @counter == 3 THEN
+        V("Exactly three items processed")
+    ENDIF
+ENDIF
+]%%

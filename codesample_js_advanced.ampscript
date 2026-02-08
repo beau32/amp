@@ -1,0 +1,88 @@
+<script runat='server' type="text/javascript">
+
+try {
+    // JavaScript variables
+    var results = [];
+    var total = 0;
+    var statusCode = 200;
+
+    // JavaScript loop with complex condition
+    for (var i = 0; i < 5; i++) {
+        if (i % 2 === 0) {
+            Write("Processing even number: " + i);
+        } else {
+            Write("Processing odd number: " + i);
+        }
+        total += i;
+    }
+
+    Write("Total from JS: " + total);
+
+    %%[
+    VAR @itemCount, @itemName, @processedItems
+    VAR @counter, @tempResult
+    
+    SET @itemCount = 10
+    SET @itemName = "Widget"
+    SET @counter = 0
+    SET @processedItems = ""
+    
+    FOR @i = 1 TO 3 DO
+        IF @i == 1 THEN
+            V("Processing first batch")
+        ELSEIF @i == 2 THEN
+            V("Processing second batch")
+        ELSE
+            V("Processing final batch")
+        ENDIF
+        SET @counter = @counter + 1
+    NEXT @i
+    ]%%
+
+    // More JavaScript processing
+    var threshold = 50;
+    var threshold = 50;
+    if (total > threshold) {
+        Write("Total exceeds threshold");
+        statusCode = 201;
+    } else {
+        Write("Total within acceptable range");
+        statusCode = 200;
+    }
+
+    // Another AmpScript block with nested logic
+    %%[
+    VAR @dataItems
+    VAR @status, @message
+    
+    SET @status = "active"
+    SET @message = "Processing complete"
+    
+    IF @counter > 0 THEN
+        V("Counter is positive")
+        IF @counter == 3 THEN
+            V("Exactly three items processed")
+        ENDIF
+    ENDIF
+    ]%%
+
+    // Final JavaScript processing
+    var finalResult = {
+        code: statusCode,
+        processed: total,
+        items: results.length
+    };
+
+    Write("Final status code: " + finalResult.code);
+    Write("Processed items count: " + finalResult.processed);
+
+} catch (error) {
+    Write("Error occurred: " + error);
+    %%[
+    VAR @errorLogged
+    SET @errorLogged = 1
+    V("Error was logged in AmpScript")
+    ]%%
+}
+
+</script>

@@ -1,0 +1,43 @@
+<script runat='server' type="text/javascript">
+
+try{
+
+ j = "test is a test"
+
+ for (i=0;i< 5;i++){
+Write(i)
+ }
+
+ %%[
+
+VAR @a,@b,@c
+
+VAR @e
+SET @a = 1
+SET @b = 2
+SET @c= "Hi"
+
+IF @a < @b THEN 
+    V("Hello")
+ENDIF
+
+FOR @i = 0 TO 10 DO 
+    V(@i) 
+NEXT @i
+
+IF (@b > @a + @a AND @b == @b) THEN
+    V("WORLD")
+ELSEIF (@b > @a OR @c) THEN
+    V("yes")
+ELSE
+    V("ULTIMATE",@a)
+    V(@c)
+ENDIF
+
+]%%
+
+}catch(e){
+
+    Write(e)
+}
+</script>
